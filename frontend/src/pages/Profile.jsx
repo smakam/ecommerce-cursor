@@ -74,7 +74,11 @@ const Profile = () => {
           try {
             const usersResponse = await api.get("/api/auth/users");
             console.log("All users:", usersResponse.data);
-            setAllUsers(usersResponse.data || []);
+            // Ensure we're setting an array, handle both formats
+            const usersData = Array.isArray(usersResponse.data)
+              ? usersResponse.data
+              : usersResponse.data?.users || [];
+            setAllUsers(usersData);
           } catch (usersErr) {
             console.error("Error fetching all users:", usersErr);
             setError((prev) => prev || "Failed to fetch users");
@@ -152,28 +156,36 @@ const Profile = () => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {allUsers.map((user) => (
-            <TableRow key={user._id}>
-              <TableCell>{user.name}</TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>
-                <Chip
-                  label={user.role}
-                  color={
-                    user.role === "admin"
-                      ? "error"
-                      : user.role === "seller"
-                      ? "secondary"
-                      : "primary"
-                  }
-                  size="small"
-                />
-              </TableCell>
-              <TableCell>
-                {new Date(user.createdAt).toLocaleDateString()}
+          {!Array.isArray(allUsers) || allUsers.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={4} align="center">
+                No users found
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            allUsers.map((user) => (
+              <TableRow key={user._id}>
+                <TableCell>{user.name}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>
+                  <Chip
+                    label={user.role}
+                    color={
+                      user.role === "admin"
+                        ? "error"
+                        : user.role === "seller"
+                        ? "secondary"
+                        : "primary"
+                    }
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell>
+                  {new Date(user.createdAt).toLocaleDateString()}
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
     </TableContainer>
