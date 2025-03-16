@@ -74,7 +74,7 @@ const Profile = () => {
           try {
             const usersResponse = await api.get("/api/auth/users");
             console.log("All users:", usersResponse.data);
-            setAllUsers(usersResponse.data.users || []);
+            setAllUsers(usersResponse.data || []);
           } catch (usersErr) {
             console.error("Error fetching all users:", usersErr);
             setError((prev) => prev || "Failed to fetch users");
