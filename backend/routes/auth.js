@@ -3,11 +3,29 @@ const router = express.Router();
 const passport = require("passport");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
-const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 const { OAuth2Client } = require("google-auth-library");
 
 // Initialize Google OAuth client
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// Helper function to hash password using crypto
+const hashPassword = (password) => {
+  const salt = crypto.randomBytes(16).toString("hex");
+  const hash = crypto
+    .pbkdf2Sync(password, salt, 1000, 64, "sha512")
+    .toString("hex");
+  return `${salt}:${hash}`;
+};
+
+// Helper function to verify password
+const verifyPassword = (password, hashedPassword) => {
+  const [salt, storedHash] = hashedPassword.split(":");
+  const hash = crypto
+    .pbkdf2Sync(password, salt, 1000, 64, "sha512")
+    .toString("hex");
+  return storedHash === hash;
+};
 
 // Register route
 router.post("/register", async (req, res) => {
@@ -20,8 +38,8 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Create new user
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Create new user with crypto hash
+    const hashedPassword = hashPassword(password);
     const user = new User({
       name,
       email,
@@ -39,36 +57,20 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log("Login attempt for email:", email);
 
-    // Find user
+    // Find user by email
     const user = await User.findOne({ email });
-    console.log("User found:", !!user);
-    console.log("User details:", {
-      id: user?._id,
-      name: user?.name,
-      email: user?.email,
-      isAdmin: user?.isAdmin,
-      role: user?.role,
-    });
-
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // Check password
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    console.log("Password valid:", isValidPassword);
-
-    if (!isValidPassword) {
+    // Verify password using crypto
+    const isPasswordValid = verifyPassword(password, user.password);
+    if (!isPasswordValid) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
     // Generate JWT
-    console.log(
-      "Generating JWT with secret:",
-      process.env.JWT_SECRET ? "present" : "missing"
-    );
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "24h",
     });
@@ -84,7 +86,6 @@ router.post("/login", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Login error:", error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -112,7 +113,7 @@ router.post("/google", async (req, res) => {
       // Create a new user if they don't exist
       console.log("Creating new user from Google login");
       const randomPassword = Math.random().toString(36).slice(-8);
-      const hashedPassword = await bcrypt.hash(randomPassword, 10);
+      const hashedPassword = hashPassword(randomPassword);
 
       user = new User({
         name,
@@ -156,14 +157,6 @@ router.get(
   "/current-user",
   passport.authenticate("jwt", { session: false }),
   (req, res) => {
-    console.log("Current user details:", {
-      id: req.user._id,
-      name: req.user.name,
-      email: req.user.email,
-      isAdmin: req.user.isAdmin,
-      role: req.user.role,
-    });
-
     res.json({
       _id: req.user._id,
       name: req.user.name,
@@ -181,10 +174,11 @@ router.get(
   async (req, res) => {
     try {
       if (!req.user.isAdmin) {
-        return res.status(403).json({ message: "Not authorized" });
+        return res.status(403).json({ message: "Access denied" });
       }
+
       const users = await User.find().select("-password");
-      res.json({ users });
+      res.json(users);
     } catch (error) {
       res.status(500).json({ message: error.message });
     }
