@@ -8,9 +8,11 @@
     "dev": "NODE_OPTIONS='--max-old-space-size=4096' nodemon server.js",
     "test": "NODE_OPTIONS='--max-old-space-size=4096' jest --detectOpenHandles --forceExit",
     "test:watch": "NODE_OPTIONS='--max-old-space-size=4096' jest --watch",
-    "test:coverage": "NODE_OPTIONS='--max-old-space-size=4096' jest --coverage"
+    "test:coverage": "NODE_OPTIONS='--max-old-space-size=4096' jest --coverage",
+    "build": "npm install"
   },
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
@@ -20,7 +22,6 @@
     "mongoose": "^7.0.3",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
-    "passport-local": "^1.0.0",
     "razorpay": "^2.8.6"
   },
   "devDependencies": {
