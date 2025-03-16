@@ -4,7 +4,7 @@ console.log("Starting model initialization...");
 
 // Import all models
 console.log("Importing Cart model...");
-const Cart = require("./Cart");
+const Cart = require("./cart");
 console.log("Cart model imported:", Cart ? "success" : "failed");
 
 console.log("Importing User model...");
