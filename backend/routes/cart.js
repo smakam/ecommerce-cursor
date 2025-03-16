@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const passport = require("passport");
-const Cart = require("../models/Cart");
+const Cart = require("../models/cart");
 
 // Middleware to protect routes
 const auth = passport.authenticate("jwt", { session: false });

@@ -5,7 +5,7 @@ const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const app = require("../server");
 const Order = require("../models/order");
-const Cart = require("../models/Cart");
+const Cart = require("../models/cart");
 const User = require("../models/user");
 const Product = require("../models/product");
 
