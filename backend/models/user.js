@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const passportLocalMongoose = require("passport-local-mongoose");
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -14,9 +13,18 @@ const userSchema = new mongoose.Schema({
     trim: true,
     lowercase: true,
   },
+  password: {
+    type: String,
+    required: true,
+  },
   isAdmin: {
     type: Boolean,
     default: false,
+  },
+  role: {
+    type: String,
+    enum: ["customer", "seller", "admin"],
+    default: "customer",
   },
   createdAt: {
     type: Date,
@@ -24,8 +32,11 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-userSchema.plugin(passportLocalMongoose, {
-  usernameField: "email",
-});
+// Remove password when converting to JSON
+userSchema.methods.toJSON = function () {
+  const user = this.toObject();
+  delete user.password;
+  return user;
+};
 
 module.exports = mongoose.model("User", userSchema);

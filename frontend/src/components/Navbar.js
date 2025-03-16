@@ -72,7 +72,7 @@ const Navbar = () => {
 
         {token ? (
           <>
-            {(user?.role === "seller" || user?.role === "admin") && (
+            {(user?.isAdmin || user?.role === "seller") && (
               <>
                 <IconButton
                   component={Link}
@@ -90,14 +90,6 @@ const Navbar = () => {
                 >
                   <InventoryIcon />
                 </IconButton>
-                <IconButton
-                  component={Link}
-                  to="/dashboard"
-                  color="inherit"
-                  title="Dashboard"
-                >
-                  <DashboardIcon />
-                </IconButton>
               </>
             )}
             <IconButton color="inherit" onClick={handleMenuOpen}>
@@ -109,7 +101,19 @@ const Navbar = () => {
               onClose={handleMenuClose}
             >
               <MenuItem onClick={handleProfile}>Profile</MenuItem>
-              <MenuItem onClick={handleOrders}>My Orders</MenuItem>
+              <MenuItem onClick={handleOrders}>
+                {user?.isAdmin ? "All Orders" : "My Orders"}
+              </MenuItem>
+              {user?.isAdmin && (
+                <MenuItem
+                  onClick={() => {
+                    navigate("/profile");
+                    handleMenuClose();
+                  }}
+                >
+                  Manage Users
+                </MenuItem>
+              )}
               <MenuItem onClick={handleLogout}>Logout</MenuItem>
             </Menu>
           </>

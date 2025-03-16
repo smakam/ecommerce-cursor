@@ -75,7 +75,7 @@ const Register = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.post("/auth/google", {
+      const response = await api.post("/api/auth/google", {
         credential: credentialResponse.credential,
       });
 

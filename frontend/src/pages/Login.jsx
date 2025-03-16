@@ -62,22 +62,23 @@ const Login = () => {
 
     setLoading(true);
     setError("");
-    console.log("Making API request to /auth/login");
+    console.log("Making API request to /api/auth/login");
 
     try {
-      const response = await api.post("/auth/login", formData);
+      const response = await api.post("/api/auth/login", formData);
       console.log("Login response status:", response.status);
-      console.log("Login response data:", {
-        success: response.data.success,
-        hasToken: !!response.data.token,
-        hasUser: !!response.data.user,
-      });
+      console.log("Full login response data:", response.data);
+      console.log("User data:", response.data.user);
+      console.log("Is admin?", response.data.user?.isAdmin);
 
       if (response.data?.token && response.data?.user) {
         try {
           localStorage.setItem("token", response.data.token);
           localStorage.setItem("user", JSON.stringify(response.data.user));
-          console.log("Token and user data stored in localStorage");
+          console.log(
+            "Stored user data:",
+            JSON.parse(localStorage.getItem("user"))
+          );
 
           console.log("Fetching cart data");
           await dispatch(fetchCart());
@@ -119,7 +120,7 @@ const Login = () => {
     setLoading(true);
     setError("");
     try {
-      const response = await api.post("/auth/google", {
+      const response = await api.post("/api/auth/google", {
         credential: credentialResponse.credential,
       });
 

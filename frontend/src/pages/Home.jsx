@@ -102,7 +102,7 @@ const Home = () => {
         ...(sort && { sort }),
       };
       const response = await getProducts(filters);
-      setProducts(response.products || []);
+      setProducts(response || []);
     } catch (error) {
       console.error("Error fetching products:", error);
       setError(error.response?.data?.message || "Error fetching products");

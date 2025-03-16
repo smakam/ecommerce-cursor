@@ -71,26 +71,29 @@ const Checkout = () => {
 
       // Create order on backend
       console.log("Creating order...", {
-        amount: totalAmount,
-        shippingInfo,
+        shippingAddress: shippingInfo,
+        paymentMethod: "razorpay",
       });
 
-      const { data } = await api.post("/payment/create-order", {
-        amount: totalAmount,
-        shippingInfo,
+      const { data } = await api.post("/api/orders", {
+        shippingAddress: shippingInfo,
+        paymentMethod: "razorpay",
       });
 
       console.log("Order created:", data);
 
+      // Debug log for Razorpay key
+      console.log("Razorpay Key:", process.env.REACT_APP_RAZORPAY_KEY_ID);
+
       const options = {
         key: process.env.REACT_APP_RAZORPAY_KEY_ID,
-        amount: data.amount,
-        currency: data.currency,
+        amount: data.razorpayOrder.amount,
+        currency: data.razorpayOrder.currency,
         name: "E-Commerce Store",
         description: "Purchase Payment",
-        order_id: data.id,
+        order_id: data.razorpayOrder.id,
         handler: function (response) {
-          handlePaymentSuccess(response);
+          handlePaymentSuccess(data.order._id, response);
         },
         prefill: {
           name: "Customer Name",
@@ -99,7 +102,7 @@ const Checkout = () => {
         },
         notes: {
           address: `${shippingInfo.address}, ${shippingInfo.city}, ${shippingInfo.state}, ${shippingInfo.country} - ${shippingInfo.pinCode}`,
-          orderId: data.id,
+          orderId: data.order._id,
         },
         theme: {
           color: "#1976d2",
@@ -117,17 +120,19 @@ const Checkout = () => {
     }
   };
 
-  const handlePaymentSuccess = async (response) => {
+  const handlePaymentSuccess = async (orderId, response) => {
     try {
       console.log("Payment successful:", response);
       setLoading(true);
 
       // Verify payment on backend
-      const verifyResponse = await api.post("/payment/verify", {
-        razorpay_payment_id: response.razorpay_payment_id,
-        razorpay_order_id: response.razorpay_order_id,
-        razorpay_signature: response.razorpay_signature,
-      });
+      const verifyResponse = await api.post(
+        `/api/orders/${orderId}/verify-payment`,
+        {
+          razorpayPaymentId: response.razorpay_payment_id,
+          razorpaySignature: response.razorpay_signature,
+        }
+      );
 
       console.log("Payment verified:", verifyResponse.data);
 

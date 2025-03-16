@@ -32,13 +32,8 @@ const ManageProducts = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await api.get("/products");
-      // Filter products to only show the seller's products
-      const sellerProducts = response.data.products.filter(
-        (product) =>
-          product.seller._id === JSON.parse(localStorage.getItem("user"))._id
-      );
-      setProducts(sellerProducts);
+      const response = await api.get("/api/products");
+      setProducts(response.data);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to fetch products");
     } finally {
@@ -57,7 +52,7 @@ const ManageProducts = () => {
 
   const handleDeleteConfirm = async () => {
     try {
-      await api.delete(`/products/${selectedProduct._id}`);
+      await api.delete(`/api/products/${selectedProduct._id}`);
       setProducts((prev) => prev.filter((p) => p._id !== selectedProduct._id));
       setDeleteDialogOpen(false);
     } catch (err) {

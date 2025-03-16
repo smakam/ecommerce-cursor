@@ -7,9 +7,9 @@ export const fetchCart = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       console.log("Fetching cart...");
-      const response = await api.get("/cart");
+      const response = await api.get("/api/cart");
       console.log("Cart fetch response:", response.data);
-      return response.data.cart;
+      return response.data.cart || { items: [] };
     } catch (error) {
       console.error(
         "Error fetching cart:",
@@ -27,9 +27,9 @@ export const addToCart = createAsyncThunk(
   async ({ productId, quantity }, { rejectWithValue }) => {
     try {
       console.log("Adding to cart:", { productId, quantity });
-      const response = await api.post("/cart/add", { productId, quantity });
+      const response = await api.post("/api/cart/add", { productId, quantity });
       console.log("Add to cart response:", response.data);
-      return response.data.cart;
+      return response.data.cart || { items: [] };
     } catch (error) {
       console.error(
         "Error adding to cart:",
@@ -46,7 +46,9 @@ export const updateCartItem = createAsyncThunk(
   "cart/updateItem",
   async ({ productId, quantity }, { rejectWithValue }) => {
     try {
-      const response = await api.put(`/cart/update/${productId}`, { quantity });
+      const response = await api.put(`/api/cart/update/${productId}`, {
+        quantity,
+      });
       return response.data.cart;
     } catch (error) {
       return rejectWithValue(
@@ -60,7 +62,7 @@ export const removeFromCart = createAsyncThunk(
   "cart/removeItem",
   async (productId, { rejectWithValue }) => {
     try {
-      const response = await api.delete(`/cart/remove/${productId}`);
+      const response = await api.delete(`/api/cart/remove/${productId}`);
       return response.data.cart;
     } catch (error) {
       return rejectWithValue(
@@ -74,7 +76,7 @@ export const clearCart = createAsyncThunk(
   "cart/clear",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.delete("/cart/clear");
+      const response = await api.delete("/api/cart/clear");
       return response.data.cart;
     } catch (error) {
       return rejectWithValue(

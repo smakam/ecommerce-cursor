@@ -1,140 +1,122 @@
 const express = require("express");
 const router = express.Router();
 const passport = require("passport");
-const Cart = require("../models/cart");
+const Cart = require("../models/Cart");
+
+// Middleware to protect routes
+const auth = passport.authenticate("jwt", { session: false });
 
 // Get user's cart
-router.get(
-  "/",
-  passport.authenticate("jwt", { session: false }),
-  async (req, res) => {
-    try {
-      let cart = await Cart.findOne({ user: req.user._id }).populate(
-        "items.product"
-      );
-      if (!cart) {
-        cart = new Cart({ user: req.user._id, items: [] });
-        await cart.save();
-      }
-      res.json(cart);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
+router.get("/", auth, async (req, res) => {
+  try {
+    const cart = await Cart.findOrCreateCart(req.user._id);
+    res.json({ success: true, cart });
+  } catch (error) {
+    console.error("Error in cart route:", error);
+    res.status(500).json({
+      success: false,
+      error: {
+        message: "Error fetching cart",
+        details: error.message,
+      },
+    });
   }
-);
+});
 
 // Add item to cart
-router.post(
-  "/add",
-  passport.authenticate("jwt", { session: false }),
-  async (req, res) => {
-    try {
-      const { productId, quantity } = req.body;
-      let cart = await Cart.findOne({ user: req.user._id });
-
-      if (!cart) {
-        cart = new Cart({ user: req.user._id, items: [] });
-      }
-
-      const itemIndex = cart.items.findIndex(
-        (item) => item.product.toString() === productId
-      );
-
-      if (itemIndex > -1) {
-        cart.items[itemIndex].quantity += quantity;
-      } else {
-        cart.items.push({ product: productId, quantity });
-      }
-
-      await cart.save();
-      cart = await cart.populate("items.product");
-      res.json(cart);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
+router.post("/add", auth, async (req, res) => {
+  try {
+    const { productId, quantity } = req.body;
+    if (!productId || !quantity) {
+      return res.status(400).json({
+        success: false,
+        error: { message: "Product ID and quantity are required" },
+      });
     }
+
+    let cart = await Cart.findOrCreateCart(req.user._id);
+    cart = await cart.addOrUpdateItem(productId, quantity);
+
+    res.json({ success: true, cart });
+  } catch (error) {
+    console.error("Error adding to cart:", error);
+    res.status(500).json({
+      success: false,
+      error: {
+        message: "Error adding item to cart",
+        details: error.message,
+      },
+    });
   }
-);
+});
 
-// Update cart item quantity
-router.put(
-  "/update/:productId",
-  passport.authenticate("jwt", { session: false }),
-  async (req, res) => {
-    try {
-      const { quantity } = req.body;
-      const cart = await Cart.findOne({ user: req.user._id });
+// Update item quantity
+router.put("/update/:productId", auth, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const { quantity } = req.body;
 
-      if (!cart) {
-        return res.status(404).json({ message: "Cart not found" });
-      }
+    let cart = await Cart.findOrCreateCart(req.user._id);
+    cart = await cart.updateItemQuantity(productId, quantity);
 
-      const itemIndex = cart.items.findIndex(
-        (item) => item.product.toString() === req.params.productId
-      );
-
-      if (itemIndex === -1) {
-        return res.status(404).json({ message: "Item not found in cart" });
-      }
-
-      if (quantity <= 0) {
-        cart.items.splice(itemIndex, 1);
-      } else {
-        cart.items[itemIndex].quantity = quantity;
-      }
-
-      await cart.save();
-      const updatedCart = await cart.populate("items.product");
-      res.json(updatedCart);
-    } catch (error) {
-      res.status(400).json({ message: error.message });
+    if (!cart) {
+      cart = await Cart.findOrCreateCart(req.user._id);
     }
+
+    res.json({ success: true, cart });
+  } catch (error) {
+    console.error("Error updating cart:", error);
+    res.status(500).json({
+      success: false,
+      error: {
+        message: "Error updating cart item",
+        details: error.message,
+      },
+    });
   }
-);
+});
 
 // Remove item from cart
-router.delete(
-  "/remove/:productId",
-  passport.authenticate("jwt", { session: false }),
-  async (req, res) => {
-    try {
-      const cart = await Cart.findOne({ user: req.user._id });
+router.delete("/remove/:productId", auth, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    let cart = await Cart.findOrCreateCart(req.user._id);
+    cart = await cart.removeItem(productId);
 
-      if (!cart) {
-        return res.status(404).json({ message: "Cart not found" });
-      }
-
-      cart.items = cart.items.filter(
-        (item) => item.product.toString() !== req.params.productId
-      );
-      await cart.save();
-
-      const updatedCart = await cart.populate("items.product");
-      res.json(updatedCart);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
+    if (!cart) {
+      cart = await Cart.findOrCreateCart(req.user._id);
     }
+
+    res.json({ success: true, cart });
+  } catch (error) {
+    console.error("Error removing from cart:", error);
+    res.status(500).json({
+      success: false,
+      error: {
+        message: "Error removing item from cart",
+        details: error.message,
+      },
+    });
   }
-);
+});
 
 // Clear cart
-router.delete(
-  "/clear",
-  passport.authenticate("jwt", { session: false }),
-  async (req, res) => {
-    try {
-      const cart = await Cart.findOne({ user: req.user._id });
+router.delete("/clear", auth, async (req, res) => {
+  try {
+    let cart = await Cart.findOrCreateCart(req.user._id);
+    cart = await cart.clearCart();
 
-      if (!cart) {
-        return res.status(404).json({ message: "Cart not found" });
-      }
-
-      cart.items = [];
-      await cart.save();
-      res.json(cart);
-    } catch (error) {
-      res.status(500).json({ message: error.message });
-    }
+    res.json({ success: true, cart });
+  } catch (error) {
+    console.error("Error clearing cart:", error);
+    res.status(500).json({
+      success: false,
+      error: {
+        message: "Error clearing cart",
+        details: error.message,
+      },
+    });
   }
-);
+});
 
 module.exports = router;

@@ -48,7 +48,7 @@ const ProtectedRoute = ({ children }) => {
 const SellerRoute = ({ children }) => {
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user") || "null");
-  if (!token || (user?.role !== "seller" && user?.role !== "admin")) {
+  if (!token || (!user?.isAdmin && user?.role !== "seller")) {
     return <Navigate to="/" />;
   }
   return children;

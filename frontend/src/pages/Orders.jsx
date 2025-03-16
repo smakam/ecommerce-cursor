@@ -12,21 +12,23 @@ import {
   CircularProgress,
   Alert,
   Box,
+  Chip,
 } from "@mui/material";
-import { api } from "../services/api";
+import { getOrders, getAllOrders } from "../services/api";
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const user = JSON.parse(localStorage.getItem("user") || "null");
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        const response = await api.get("/orders/myorders");
-        console.log("Orders fetched:", response.data);
-        setOrders(response.data);
+        const data = user?.isAdmin ? await getAllOrders() : await getOrders();
+        console.log("Orders fetched:", data);
+        setOrders(data);
       } catch (error) {
         console.error("Error fetching orders:", error);
         setError(error.response?.data?.message || "Failed to fetch orders");
@@ -36,7 +38,7 @@ const Orders = () => {
     };
 
     fetchOrders();
-  }, []);
+  }, [user?.isAdmin]);
 
   if (loading) {
     return (
@@ -81,13 +83,13 @@ const Orders = () => {
           <TableBody>
             {orders.map((order) => (
               <TableRow key={order._id}>
-                <TableCell>{order._id}</TableCell>
+                <TableCell>{order._id.slice(-8)}</TableCell>
                 <TableCell>
                   {new Date(order.createdAt).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
                   <Box>
-                    {order.orderItems?.map((item, index) => (
+                    {order.items?.map((item, index) => (
                       <Typography key={index} variant="body2">
                         {item.quantity}x{" "}
                         {item.product?.name || "Product not found"}
@@ -96,7 +98,19 @@ const Orders = () => {
                   </Box>
                 </TableCell>
                 <TableCell>${(order.totalAmount || 0).toFixed(2)}</TableCell>
-                <TableCell>{order.orderStatus || "Processing"}</TableCell>
+                <TableCell>
+                  <Chip
+                    label={order.status || "Processing"}
+                    color={
+                      order.status === "paid"
+                        ? "success"
+                        : order.status === "pending"
+                        ? "warning"
+                        : "default"
+                    }
+                    size="small"
+                  />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

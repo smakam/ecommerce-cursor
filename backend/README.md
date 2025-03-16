@@ -15,7 +15,6 @@ Create a `.env` file in the root directory with the following variables:
 ```env
 MONGODB_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
-SESSION_SECRET=your_session_secret
 RAZORPAY_KEY_ID=your_razorpay_key_id
 RAZORPAY_KEY_SECRET=your_razorpay_key_secret
 FRONTEND_URL=your_frontend_url
