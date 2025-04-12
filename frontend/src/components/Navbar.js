@@ -61,7 +61,7 @@ const Navbar = () => {
           to="/"
           sx={{ flexGrow: 1, textDecoration: "none", color: "inherit" }}
         >
-          E-Commerce
+          Sreeni's Ecommerce Store
         </Typography>
 
         <IconButton component={Link} to="/cart" color="inherit">

@@ -89,7 +89,7 @@ const Checkout = () => {
         key: process.env.REACT_APP_RAZORPAY_KEY_ID,
         amount: data.razorpayOrder.amount,
         currency: data.razorpayOrder.currency,
-        name: "E-Commerce Store",
+        name: "Sreeni's Ecommerce Store",
         description: "Purchase Payment",
         order_id: data.razorpayOrder.id,
         handler: function (response) {
