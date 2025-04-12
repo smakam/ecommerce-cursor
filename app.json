@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "ecommerce-mobile",
-    "slug": "ecommerce-mobile",
+    "name": "Sreeni's Ecommerce Store",
+    "slug": "sreenis-store",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,17 +12,34 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sreeni75.sreenisstore"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.sreeni75.sreenisstore"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": ["expo-router"],
+    "scheme": "sreenis-store",
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "61e6a4a9-e1c9-42e1-8919-d36e6526b301"
+      }
+    },
+    "owner": "sreeni75"
   }
 }
